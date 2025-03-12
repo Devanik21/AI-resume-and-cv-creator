@@ -59,7 +59,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 📋 Navigation")
     nav_options = ["Create Resume & Cover Letter", "Profile Manager", "History", "ATS Optimizer"]
-    nav_option = st.select_slider("", options=nav_options, value=nav_options[0])
+    nav_option = st.selectbox("", options=nav_options, index=0)
     
     st.markdown("---")
     st.markdown("### 💾 Saved Profiles")
@@ -136,9 +136,9 @@ if nav_option == "Create Resume & Cover Letter":
                                ["Chronological", "Functional", "Combination", "Targeted"], key="resume_format")
         
         with col2:
-            tone = st.select_slider("Cover Letter Tone:", 
+            tone = st.selectbox("Cover Letter Tone:", 
                           options=["Formal", "Professional", "Balanced", "Conversational"], 
-                          value="Professional", key="tone")
+                          index=1, key="tone")
         
         st.markdown("### 📚 Additional Information (Optional)")
         company_research = st.text_area("Company Research:", key="company_research", height=100)
