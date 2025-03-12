@@ -28,7 +28,7 @@ st.markdown(
             font-weight: bold;
             border-radius: 10px;
             padding: 10px 20px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 139, 0.8);
+            box-shadow: 0px 5px 15px rgba(0, 0, 139, 0.2);
         }
         .feedback-box {
             padding: 10px;
