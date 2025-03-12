@@ -35,13 +35,7 @@ st.markdown(
             padding: 10px 20px;
             box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
         }
-        .custom-card {
-            background-color: black;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
+
         .feedback-box {
             padding: 10px;
             border-radius: 5px;
