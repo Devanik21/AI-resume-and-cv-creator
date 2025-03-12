@@ -22,7 +22,7 @@ st.markdown(
             background-color: #074f61;
         }
         .stTextInput>div>div>input, .stSelectbox>div>div {
-            background-color: #074f61;
+            background-color: #093d4a;
             border-radius: 10px;
             padding: 8px;
             font-weight: bold;
