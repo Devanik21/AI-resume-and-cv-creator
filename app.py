@@ -1,7 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
 import pandas as pd
-from io import StringIO
 import json
 import re
 from datetime import datetime
@@ -9,7 +8,7 @@ import uuid
 
 # Configure the Streamlit page
 st.set_page_config(
-    page_title="Advanced AI Resume & Cover Letter Generator",
+    page_title="AI Resume & Cover Letter Generator",
     page_icon="📄",
     layout="wide",
 )
@@ -18,11 +17,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        body {
-            background-color: #074f61;
-        }
         .stTextInput>div>div>input, .stSelectbox>div>div {
-            background-color: #093d4a;
             border-radius: 10px;
             padding: 8px;
             font-weight: bold;
@@ -35,30 +30,20 @@ st.markdown(
             padding: 10px 20px;
             box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
         }
-
         .feedback-box {
             padding: 10px;
             border-radius: 5px;
             margin: 10px 0;
         }
-        .high-match {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-        }
-        .medium-match {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-        }
-        .low-match {
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-        }
+        .high-match { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .medium-match { background-color: #fff3cd; border: 1px solid #ffeeba; }
+        .low-match { background-color: #f8d7da; border: 1px solid #f5c6cb; }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# Initialize session state for history tracking
+# Initialize session state
 if 'history' not in st.session_state:
     st.session_state.history = []
 if 'saved_profiles' not in st.session_state:
@@ -73,7 +58,8 @@ with st.sidebar:
     
     st.markdown("---")
     st.markdown("### 📋 Navigation")
-    nav_option = st.radio("", ["Create Resume & Cover Letter", "Profile Manager", "History", "ATS Optimizer"])
+    nav_options = ["Create Resume & Cover Letter", "Profile Manager", "History", "ATS Optimizer"]
+    nav_option = st.select_slider("", options=nav_options, value=nav_options[0])
     
     st.markdown("---")
     st.markdown("### 💾 Saved Profiles")
@@ -88,49 +74,44 @@ with st.sidebar:
 
 # Main content area
 if nav_option == "Create Resume & Cover Letter":
-    st.title("📄 Advanced AI Resume & Cover Letter Generator")
-    st.write("Generate a professional resume and tailored cover letter with ATS optimization")
+    st.title("📄 AI Resume & Cover Letter Generator")
     
     # Create tabs for different sections
     tab1, tab2, tab3 = st.tabs(["Personal Info", "Job Details", "Generate & Export"])
     
     with tab1:
-        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
         st.markdown("## 📝 Personal Information")
         
         # Two-column layout for personal info
         col1, col2 = st.columns(2)
         with col1:
             name = st.text_input("👤 Full Name:", key="name")
-            email = st.text_input("✉️ Email Address:", key="email")
-            phone = st.text_input("📞 Phone Number:", key="phone")
-            linkedin = st.text_input("🔗 LinkedIn Profile:", key="linkedin")
-            portfolio = st.text_input("🌐 Portfolio/Website (Optional):", key="portfolio")
+            email = st.text_input("✉️ Email:", key="email")
+            phone = st.text_input("📞 Phone:", key="phone")
+            linkedin = st.text_input("🔗 LinkedIn:", key="linkedin")
         
         with col2:
             location = st.text_input("📍 Location:", key="location")
-            headline = st.text_input("💫 Professional Headline:", key="headline", 
-                              help="A brief statement summarizing your professional identity")
-            objective = st.text_area("🎯 Career Objective:", key="objective", height=123)
+            headline = st.text_input("💫 Professional Headline:", key="headline")
+            portfolio = st.text_input("🌐 Portfolio (Optional):", key="portfolio")
+            objective = st.text_area("🎯 Career Objective:", key="objective", height=100)
         
         st.markdown("## 💼 Professional Experience")
-        experience = st.text_area("Describe your work experience in detail:", key="experience", height=150,
-                           help="Include company names, positions, dates, and key achievements")
+        experience = st.text_area("Describe your work experience:", key="experience", height=150)
         
-        st.markdown("## 🛠️ Skills & Expertise")
-        skills = st.text_area("List your technical and soft skills:", key="skills", height=100)
-        
-        st.markdown("## 🎓 Education & Certifications")
         col1, col2 = st.columns(2)
         with col1:
-            education = st.text_area("Education Details:", key="education", height=100)
+            st.markdown("## 🛠️ Skills")
+            skills = st.text_area("List your skills:", key="skills", height=100)
+        
         with col2:
+            st.markdown("## 🎓 Education")
+            education = st.text_area("Education Details:", key="education", height=100)
             certifications = st.text_area("Certifications (Optional):", key="certifications", height=100)
             
         # Save profile option
-        st.markdown("## 💾 Save Your Profile")
         profile_name = st.text_input("Profile Name:", key="profile_name")
-        if st.button("Save Current Profile") and profile_name:
+        if st.button("Save Profile") and profile_name:
             profile_data = {
                 "name": name, "email": email, "phone": phone, "linkedin": linkedin,
                 "portfolio": portfolio, "location": location, "headline": headline,
@@ -138,50 +119,44 @@ if nav_option == "Create Resume & Cover Letter":
                 "education": education, "certifications": certifications
             }
             st.session_state.saved_profiles[profile_name] = profile_data
-            st.success(f"Profile '{profile_name}' saved successfully!")
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.success(f"Profile '{profile_name}' saved!")
             
     with tab2:
-        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
         st.markdown("## 🏢 Job Details")
         
         job_title = st.text_input("🔍 Job Title:", key="job_title")
         company = st.text_input("🏢 Company Name:", key="company")
         
         st.markdown("### 📋 Job Description")
-        job_description = st.text_area("Paste the complete job description here:", key="job_description", height=250)
+        job_description = st.text_area("Paste the job description:", key="job_description", height=250)
         
-        st.markdown("### 🎛️ Advanced Options")
-        resume_format = st.selectbox("Resume Format:", 
+        col1, col2 = st.columns(2)
+        with col1:
+            resume_format = st.selectbox("Resume Format:", 
                                ["Chronological", "Functional", "Combination", "Targeted"], key="resume_format")
         
-        tone = st.select_slider("Cover Letter Tone:", 
+        with col2:
+            tone = st.select_slider("Cover Letter Tone:", 
                           options=["Formal", "Professional", "Balanced", "Conversational"], 
                           value="Professional", key="tone")
         
-        # Option to upload company research or additional info
         st.markdown("### 📚 Additional Information (Optional)")
-        company_research = st.text_area("Company Research or Additional Context:", key="company_research", height=100,
-                                 help="Add any research about the company culture, values, or specific projects")
+        company_research = st.text_area("Company Research:", key="company_research", height=100)
         
-        # Option to upload resume for improvement
-        st.markdown("### 📤 Upload Existing Resume (Optional)")
-        uploaded_resume = st.file_uploader("Upload your current resume for improvement:", type=['txt', 'pdf', 'docx'])
-        st.markdown('</div>', unsafe_allow_html=True)
+        uploaded_resume = st.file_uploader("Upload current resume (Optional):", type=['txt', 'pdf', 'docx'])
         
     with tab3:
-        st.markdown('<div class="custom-card">', unsafe_allow_html=True)
         st.markdown("## 🚀 Generate Your Documents")
         
         generate_options = st.multiselect("Select what to generate:", 
-                                    ["Resume", "Cover Letter", "ATS Optimization Analysis"], 
+                                    ["Resume", "Cover Letter", "ATS Analysis"], 
                                     default=["Resume", "Cover Letter"])
         
-        if st.button("🚀 Generate Selected Documents"):
+        if st.button("🚀 Generate Documents"):
             if not api_key:
-                st.warning("⚠️ Please enter a valid Google Gemini API Key in the sidebar.")
+                st.warning("⚠️ Please enter a valid Google Gemini API Key.")
             elif not name or not experience or not skills or not job_description:
-                st.warning("⚠️ Please fill in all required fields in the Personal Info and Job Details tabs.")
+                st.warning("⚠️ Please fill in all required fields.")
             else:
                 try:
                     # Configure API
@@ -194,24 +169,23 @@ if nav_option == "Create Resume & Cover Letter":
                                     f"LinkedIn: {linkedin}\nPortfolio: {portfolio}\nObjective: {objective}\n"
                                     f"Experience: {experience}\nSkills: {skills}\nEducation: {education}\n"
                                     f"Certifications: {certifications}\n\n"
-                                    f"Optimize this resume specifically for the following job description: {job_description}\n"
-                                    f"Format the resume in Markdown with clear sections and bullet points. Ensure it highlights relevant skills and experience for the job.")
+                                    f"Optimize for this job description: {job_description}\n"
+                                    f"Format in Markdown with clear sections and bullet points.")
                     
-                    cover_letter_prompt = (f"Generate a {tone.lower()} tone cover letter for {name} applying for the position of {job_title} at {company}.\n"
+                    cover_letter_prompt = (f"Generate a {tone.lower()} tone cover letter for {name} applying for {job_title} at {company}.\n"
                                          f"Include details about:\nExperience: {experience}\nSkills: {skills}\nEducation: {education}\n"
-                                         f"Tailor this cover letter specifically to match this job description: {job_description}\n"
-                                         f"Additional company context: {company_research}\n"
-                                         f"Make the cover letter compelling, concise, and highlight the candidate's value proposition.")
+                                         f"Tailor to this job description: {job_description}\n"
+                                         f"Additional company context: {company_research}")
                     
-                    ats_analysis_prompt = (f"Analyze how well this candidate's profile matches the job description and provide an ATS optimization analysis:\n"
+                    ats_analysis_prompt = (f"Analyze how well this candidate's profile matches the job description:\n"
                                         f"Candidate Profile:\nName: {name}\nHeadline: {headline}\nExperience: {experience}\n"
                                         f"Skills: {skills}\nEducation: {education}\nCertifications: {certifications}\n\n"
                                         f"Job Description: {job_description}\n\n"
-                                        f"Provide: 1) A match percentage, 2) Top 5 keywords missing from the profile, "
-                                        f"3) Specific suggestions to improve ATS compatibility, 4) Strengths in the current profile")
+                                        f"Provide: 1) Match percentage, 2) Top 5 keywords missing from profile, "
+                                        f"3) Specific suggestions to improve ATS compatibility, 4) Profile strengths")
                     
                     # Generate responses
-                    with st.spinner("🔄 Creating your documents..."):
+                    with st.spinner("🔄 Creating documents..."):
                         results = {}
                         
                         if "Resume" in generate_options:
@@ -222,7 +196,7 @@ if nav_option == "Create Resume & Cover Letter":
                             cover_letter_response = model.generate_content(cover_letter_prompt)
                             results["cover_letter"] = cover_letter_response.text
                             
-                        if "ATS Optimization Analysis" in generate_options:
+                        if "ATS Analysis" in generate_options:
                             ats_response = model.generate_content(ats_analysis_prompt)
                             results["ats_analysis"] = ats_response.text
                             
@@ -247,29 +221,28 @@ if nav_option == "Create Resume & Cover Letter":
                         st.markdown(results["cover_letter"])
                         
                     if "ats_analysis" in results:
-                        st.markdown("### 🔍 ATS Optimization Analysis")
+                        st.markdown("### 🔍 ATS Analysis")
                         
                         # Extract match percentage using regex
                         match_text = results["ats_analysis"]
                         match_percentage = re.search(r'(\d+)%', match_text)
                         if match_percentage:
                             match_value = int(match_percentage.group(1))
-                            # Create a visual indicator of match strength
                             if match_value >= 80:
-                                st.markdown(f'<div class="feedback-box high-match">Match Score: {match_value}% - Strong Match</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="feedback-box high-match">Match: {match_value}% - Strong</div>', unsafe_allow_html=True)
                             elif match_value >= 60:
-                                st.markdown(f'<div class="feedback-box medium-match">Match Score: {match_value}% - Good Match</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="feedback-box medium-match">Match: {match_value}% - Good</div>', unsafe_allow_html=True)
                             else:
-                                st.markdown(f'<div class="feedback-box low-match">Match Score: {match_value}% - Needs Improvement</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="feedback-box low-match">Match: {match_value}% - Needs Improvement</div>', unsafe_allow_html=True)
                         
                         st.markdown(results["ats_analysis"])
                     
                     # Export options
                     st.markdown("### 📥 Export Options")
-                    export_format = st.selectbox("Export Format:", ["Text File", "JSON", "Markdown"])
+                    export_format = st.selectbox("Export Format:", ["Text", "JSON", "Markdown"])
                     
                     if st.button("Export Documents"):
-                        if export_format == "Text File":
+                        if export_format == "Text":
                             export_text = ""
                             for doc_type, content in results.items():
                                 export_text += f"--- {doc_type.upper()} ---\n\n{content}\n\n"
@@ -300,25 +273,20 @@ if nav_option == "Create Resume & Cover Letter":
                 
                 except Exception as e:
                     st.error(f"❌ Error: {e}")
-                    st.info("If you're having issues, try using a different model like 'gemini-1.5-pro'.")
-        st.markdown('</div>', unsafe_allow_html=True)
+                    st.info("Try using a different model like 'gemini-1.5-pro'.")
 
 elif nav_option == "Profile Manager":
     st.title("👤 Profile Manager")
     
     if not st.session_state.saved_profiles:
-        st.info("You don't have any saved profiles yet. Create a profile in the Resume & Cover Letter tab.")
+        st.info("No saved profiles yet. Create one in the Resume & Cover Letter tab.")
     else:
-        st.markdown("### 📋 Your Saved Profiles")
-        profile_to_view = st.selectbox("Select a profile to view or edit:", list(st.session_state.saved_profiles.keys()))
+        profile_to_view = st.selectbox("Select profile to edit:", list(st.session_state.saved_profiles.keys()))
         
         if profile_to_view:
             profile_data = st.session_state.saved_profiles[profile_to_view]
-            
-            st.markdown('<div class="custom-card">', unsafe_allow_html=True)
             st.markdown(f"## Profile: {profile_to_view}")
             
-            # Display and allow editing of profile data
             edited_profile = {}
             col1, col2 = st.columns(2)
             
@@ -347,7 +315,7 @@ elif nav_option == "Profile Manager":
             with col1:
                 if st.button("Update Profile"):
                     st.session_state.saved_profiles[profile_to_view] = edited_profile
-                    st.success(f"Profile '{profile_to_view}' updated successfully!")
+                    st.success(f"Profile '{profile_to_view}' updated!")
             with col2:
                 new_name = st.text_input("New Profile Name:")
                 if st.button("Save As New") and new_name:
@@ -358,22 +326,20 @@ elif nav_option == "Profile Manager":
                     del st.session_state.saved_profiles[profile_to_view]
                     st.success(f"Profile '{profile_to_view}' deleted!")
                     st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
 
 elif nav_option == "History":
     st.title("📜 Generation History")
     
     if not st.session_state.history:
-        st.info("No generation history available. Generate a resume or cover letter first.")
+        st.info("No generation history available.")
     else:
-        history_items = st.session_state.history
+        history_items = st.session_state.history.copy()
         history_items.reverse()  # Show most recent first
         
         for idx, item in enumerate(history_items):
             with st.expander(f"{item['timestamp']} - {item['job_title']} at {item['company']}"):
                 results = item["results"]
                 
-                # Display documents in tabs
                 if results:
                     doc_tabs = st.tabs(["Resume", "Cover Letter", "ATS Analysis"])
                     
@@ -381,21 +347,20 @@ elif nav_option == "History":
                         if "resume" in results:
                             st.markdown(results["resume"])
                         else:
-                            st.info("No resume was generated for this entry.")
+                            st.info("No resume was generated.")
                             
                     with doc_tabs[1]:
                         if "cover_letter" in results:
                             st.markdown(results["cover_letter"])
                         else:
-                            st.info("No cover letter was generated for this entry.")
+                            st.info("No cover letter was generated.")
                             
                     with doc_tabs[2]:
                         if "ats_analysis" in results:
                             st.markdown(results["ats_analysis"])
                         else:
-                            st.info("No ATS analysis was generated for this entry.")
+                            st.info("No ATS analysis was generated.")
                 
-                # Delete option
                 if st.button(f"Delete Entry", key=f"del_{idx}"):
                     st.session_state.history.remove(item)
                     st.success("History entry deleted!")
@@ -403,7 +368,6 @@ elif nav_option == "History":
 
 elif nav_option == "ATS Optimizer":
     st.title("🎯 ATS Optimizer")
-    st.write("Analyze your resume against a job description to improve ATS compatibility")
     
     col1, col2 = st.columns(2)
     
@@ -417,36 +381,32 @@ elif nav_option == "ATS Optimizer":
     
     if st.button("🔍 Analyze ATS Compatibility") and api_key:
         if not resume_text or not job_desc:
-            st.warning("Please provide both your resume and the job description.")
+            st.warning("Please provide both resume and job description.")
         else:
             try:
-                # Configure API
                 genai.configure(api_key=api_key)
                 model = genai.GenerativeModel("gemini-2.0-flash")
                 
-                ats_prompt = (f"Perform a detailed ATS (Applicant Tracking System) compatibility analysis:\n\n"
+                ats_prompt = (f"Perform a detailed ATS compatibility analysis:\n\n"
                             f"RESUME:\n{resume_text}\n\n"
                             f"JOB DESCRIPTION:\n{job_desc}\n\n"
-                            f"Provide the following analysis:\n"
+                            f"Provide:\n"
                             f"1. Overall match score (percentage)\n"
-                            f"2. Keyword analysis (which important keywords are present/missing)\n"
-                            f"3. Specific recommendations to improve ATS compatibility\n"
-                            f"4. Strengths of the current resume\n"
-                            f"5. Suggested resume modifications with examples\n")
+                            f"2. Keywords analysis (present/missing)\n"
+                            f"3. Recommendations to improve\n"
+                            f"4. Current resume strengths\n"
+                            f"5. Suggested modifications with examples\n")
                 
-                with st.spinner("Analyzing your resume..."):
+                with st.spinner("Analyzing resume..."):
                     ats_response = model.generate_content(ats_prompt)
                     analysis = ats_response.text
                 
-                # Extract match percentage using regex
                 match_percentage = re.search(r'(\d+)%', analysis)
                 if match_percentage:
                     match_value = int(match_percentage.group(1))
-                    # Create a progress bar for the match score
                     st.markdown("### Match Score")
                     st.progress(match_value/100)
                     
-                    # Add color-coded feedback
                     if match_value >= 80:
                         st.markdown(f'<div class="feedback-box high-match">Score: {match_value}% - Strong Match</div>', unsafe_allow_html=True)
                     elif match_value >= 60:
@@ -454,17 +414,15 @@ elif nav_option == "ATS Optimizer":
                     else:
                         st.markdown(f'<div class="feedback-box low-match">Score: {match_value}% - Needs Improvement</div>', unsafe_allow_html=True)
                 
-                # Display full analysis
                 st.markdown("### 📊 Detailed Analysis")
                 st.markdown(analysis)
                 
-                # Option to generate an optimized version
                 if st.button("✨ Generate Optimized Resume"):
                     optimize_prompt = (f"Based on this resume:\n{resume_text}\n\n"
                                     f"And this job description:\n{job_desc}\n\n"
-                                    f"Generate a fully optimized version of the resume for ATS compatibility. "
-                                    f"Keep the same basic information but reorganize, rephrase, and enhance "
-                                    f"to maximize keyword matching and relevance. Format in Markdown.")
+                                    f"Generate a fully optimized resume for ATS compatibility. "
+                                    f"Keep the same basic information but rephrase and enhance "
+                                    f"to maximize keyword matching. Format in Markdown.")
                     
                     with st.spinner("Generating optimized resume..."):
                         optimized_response = model.generate_content(optimize_prompt)
@@ -473,7 +431,6 @@ elif nav_option == "ATS Optimizer":
                     st.markdown("### ✅ Optimized Resume")
                     st.markdown(optimized_resume)
                     
-                    # Download option
                     st.download_button(
                         label="Download Optimized Resume",
                         data=optimized_resume,
