@@ -5,6 +5,3 @@ PyPDF2
 python-docx
 pandas
 openpyxl
-striprtf
-olefile
-pywin32
