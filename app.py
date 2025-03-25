@@ -474,12 +474,11 @@ if st.button("🔍 Analyze ATS Compatibility") and api_key:
                   
                 # Display feedback based on match score
                 if match_value >= 80:  
-                    st.markdown(f'<div class="feedback-box high-match">Score: {match_value}% - Strong Match</div>', unsafe_allow_html=True)  
+                    st.markdown(f'<div style="padding: 10px; background-color: #2ecc71; color: white; border-radius: 5px;">Score: {match_value}% - Strong Match</div>', unsafe_allow_html=True)    
                 elif match_value >= 60:  
-                    st.markdown(f'<div class="feedback-box medium-match">Score: {match_value}% - Good Match</div>', unsafe_allow_html=True)  
+                    st.markdown(f'<div style="padding: 10px; background-color: #f1c40f; color: black; border-radius: 5px;">Score: {match_value}% - Good Match</div>', unsafe_allow_html=True)  
                 else:  
-                    st.markdown(f'<div class="feedback-box low-match">Score: {match_value}% - Needs Improvement</div>', unsafe_allow_html=True)  
-              
+                    st.markdown(f'<div style="padding: 10px; background-color: #e74c3c; color: white; border-radius: 5px;">Score: {match_value}% - Needs Improvement</div>', unsafe_allow_html=True)  
             # Display ATS Analysis  
             st.markdown("### 📊 Detailed Analysis")  
             st.markdown(analysis)  
